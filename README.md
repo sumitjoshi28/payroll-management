@@ -4,6 +4,12 @@ Payroll Management is a small, offline-first Android application for creating pa
 
 Payrolls are persisted locally with Room, while a `PayrollApi` abstraction and Hilt-provided mock implementation represent the remote integration point.
 
+# Demo
+
+https://github.com/user-attachments/assets/6f1f7796-a5c6-4ce9-b50b-f2715ab09dc2
+
+https://github.com/user-attachments/assets/47bd6f96-b4ad-4035-aa63-2b0dcd0ba72c
+
 ## Features
 
 - View all previously created payrolls, newest first.
