@@ -127,34 +127,6 @@ Room database       PayrollApi
 (source of truth)   (mock upload)
 ```
 
-The dependency direction points inward: the domain layer defines models, repository contracts, and business rules without depending on Android UI or persistence details.
-
-### Presentation and MVI
-
-Each screen has a contract containing:
-
-- An immutable `UiState` data class.
-- A sealed `Action` hierarchy for user intent.
-- A sealed `Effect` hierarchy for one-time navigation events.
-
-ViewModels expose read-only `StateFlow` instances. Compose routes collect state with `collectAsStateWithLifecycle`, send actions back to the ViewModel, and collect buffered effect channels for navigation. Stateless screen composables receive only state and an action callback, which keeps rendering separate from orchestration.
-
-The application contains three Navigation Compose destinations:
-
-- Payroll list
-- Create payroll
-- Payroll detail, addressed by payroll ID
-
-### Domain and Business Logic
-
-Business rules are kept outside the UI:
-
-- `CalculateEmployeePayUseCase` owns tax and net-pay calculation.
-- `CreatePayrollUseCase` validates input, parses decimal wages, timestamps the payroll through an injected `Clock`, calculates employee pay, and persists the completed aggregate.
-- Observe use cases expose reactive payroll list and detail streams.
-
-`Clock` is injected so creation timestamps can be deterministic in tests. Wages, tax, and net values use `Long` cents to avoid floating-point errors; `BigDecimal` is used only while converting user-entered decimal text into cents.
-
 ### Offline-First Data Flow
 
 Room is the single source of truth consumed by the UI. A payroll and its employees are inserted in one Room transaction, after which Room's `Flow` invalidation updates the list and detail screens automatically.
@@ -162,16 +134,6 @@ Room is the single source of truth consumed by the UI. A payroll and its employe
 The local model uses separate `payrolls` and `employees` tables with a foreign key and cascading delete behavior. Employee position is stored explicitly so form order is retained when the aggregate is reconstructed.
 
 After the local transaction succeeds, the repository performs a best-effort upload through `PayrollApi`. The current `MockPayrollApi` always succeeds, but the interface allows a real remote implementation to be introduced without changing the domain or presentation layers. A remote failure does not roll back locally saved payroll data.
-
-### Dependency Injection
-
-Hilt provides and scopes the application dependencies:
-
-- Room database and DAO
-- `PayrollRepositoryImpl` as `PayrollRepository`
-- `MockPayrollApi` as `PayrollApi`
-- System `Clock`
-- ViewModels and use cases through constructor injection
 
 ## Project Structure
 
@@ -225,14 +187,6 @@ Tax calculation, validation, parsing, and payroll creation are centralized in do
 ### Immutable state and explicit effects
 
 State is modeled as immutable values and exposed as read-only `StateFlow`. Navigation is represented as a one-time effect instead of persistent state, avoiding accidental re-navigation during recomposition.
-
-### Integer representation for money
-
-Persisting cents as `Long` avoids binary floating-point rounding errors. This is adequate for the current USD-only requirements and keeps Room storage and aggregate calculations simple.
-
-### Local commit before remote upload
-
-Creating a payroll does not require network availability. The repository persists first and treats upload as secondary, matching the offline-first requirement and keeping the primary workflow responsive.
 
 ## What I Would Improve With More Time
 
