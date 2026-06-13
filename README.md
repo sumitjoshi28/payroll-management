@@ -131,8 +131,6 @@ Room database       PayrollApi
 
 Room is the single source of truth consumed by the UI. A payroll and its employees are inserted in one Room transaction, after which Room's `Flow` invalidation updates the list and detail screens automatically.
 
-The local model uses separate `payrolls` and `employees` tables with a foreign key and cascading delete behavior. Employee position is stored explicitly so form order is retained when the aggregate is reconstructed.
-
 After the local transaction succeeds, the repository performs a best-effort upload through `PayrollApi`. The current `MockPayrollApi` always succeeds, but the interface allows a real remote implementation to be introduced without changing the domain or presentation layers. A remote failure does not roll back locally saved payroll data.
 
 ## Project Structure
